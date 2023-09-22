@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fabric-did/did"
 	"fabric-did/ssi"
+	"fabric-did/vc"
 	"fmt"
 )
 
@@ -26,7 +27,7 @@ func main() {
 
 	// This adds the method to the VerificationMethod list and stores a reference to the assertion list
 	doc.AddAssertionMethod(verificationMethod)
-
+	//doc.AddAuthenticationMethod(verificationMethod)
 	didJson, _ := json.MarshalIndent(doc, "", "  ")
 	fmt.Println(string(didJson))
 
@@ -35,8 +36,16 @@ func main() {
 	_ = json.Unmarshal(didJson, &parsedDIDDoc)
 
 	// It can return the key in the convenient lestrrat-go/jwx JWK
-	parsedDIDDoc.AssertionMethod[0].JWK()
-
+	jwk, _ := parsedDIDDoc.AssertionMethod[0].JWK()
+	fmt.Println(jwk)
 	// Or return a native crypto.PublicKey
-	parsedDIDDoc.AssertionMethod[0].PublicKey()
+	key, _ := parsedDIDDoc.AssertionMethod[0].PublicKey()
+	fmt.Println(key)
+
+	credential := vc.VerifiableCredential{}
+	json.Unmarshal([]byte(`{
+		  "id":"did:example:123#vc-1",
+		  "type":["VerifiableCredential", "custom"],
+		  "credentialSubject": {"name": "test"}
+		}`), &credential)
 }
