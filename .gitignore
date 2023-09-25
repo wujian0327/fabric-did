@@ -28,4 +28,6 @@ Temporary Items
 
 .idea
 
-.config
+config/ordererOrganizations
+config/peerOrganizations
+.vscode
