@@ -30,4 +30,7 @@ Temporary Items
 
 config/ordererOrganizations
 config/peerOrganizations
+config/fabric-ca
+config/cryptogen
+config/ccp*
 .vscode

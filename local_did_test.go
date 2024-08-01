@@ -72,7 +72,6 @@ func TestEd25519(t *testing.T) {
 	msg := "abc123"
 
 	msgByte := []byte(msg)
-
 	// 进行ed25519签名
 	signature := ed25519.Sign(privateKey, msgByte)
 
