@@ -1,136 +1,152 @@
-**基于区块链和隐私保护的分布式身份认证系统**
+# 基于区块链和隐私保护的分布式身份认证系统
 
-## 分布式身份认证系统：
+## 测试环境
+ubuntu 22.04
 
-**分为两个部分**：
+golang 1.18
 
-![图片](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/640)
+fabric 2.4.3
 
-### 分布式身份标识 (DID)
+**因为fabric-sdk-go v1.0.0只支持到fabric2.4，golang的版本也不能太高，只推荐1.18**
 
-[Decentralized Identifiers (DIDs) v1.0 (w3.org)](https://www.w3.org/TR/did-core/)
+**后续可能会使用Fabric Gateway取代fabric-sdk-go以支持最新的fabric**
 
-用`DID`来构建每一个**实体的标识符**，用`DID Document`文档来储存身份的元数据，用`DID私钥`来对Jason-LD格式的数字凭证进行**签名**，就可以加密安全，保护隐私和可由第三方进行机器验证的方式在Web上表达现实社会中各种各样的凭证。在区块链、密码学的支持下，这种凭证比物理凭证更加的可信赖。
+**但目前暂时继续使用fabric2.4**
 
-#### DID身份的构成:
-
-1. did开头表示分布式身份表示,
-2. the identifier for the DID method
-3. the DID method-specific identifier.
-
-![imgpng](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/0d1d710da7c9b6e8a152dc4b6f7d4673-img.png)
-
-上面的示例 DID 解析为 DID 文档。 DID 文档包含与 DID 关联的信息，例如以加密方式验证 DID 控制器的方法。
-
-#### EXAMPLE 1: A simple DID document
-
-```json
-{
-"@context": [
-"https://www.w3.org/ns/did/v1",
-"https://w3id.org/security/suites/ed25519-2020/v1"
-],
-"id": "did:example:123456789abcdefghi",
-    "PK","SK"
-"authentication": [{
-
-    "id": "did:example:123456789abcdefghi#keys-1",
-    "type": "Ed25519VerificationKey2020",
-    "controller": "did:example:123456789abcdefghi",
-    "publicKeyMultibase": "zH3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
-}]
-}
+## 1. 本地DID测试
+执行
+```shell
+go mod tidy
+```
+运行本地DID测试
+```shell
+go test -v local_did_test.go
 ```
 
-#### DID架构
+![image-20240801133603458](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20240801133603458.png)
 
-<img src="https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/838f1e94d3c65297280d1d95257afef8-img_1.png" alt="img1png" style="zoom:80%;" />
+## 2. fabric2.4 环境测试搭建
 
+### 2.1 克隆fabric-sample仓库
 
+```bash
+git clone https://github.com/hyperledger/fabric-samples.git
+cd fabric-sample
+git checkout v2.4.3
+```
 
-### 可验证数字凭证 (Verifiable Credentials)
+### 2.2 下载二进制文件
 
-[Verifiable Credentials Data Model v1.1 (w3.org)](https://www.w3.org/TR/vc-data-model/)
+```bash
+wget https://github.com/hyperledger/fabric/releases/download/v2.4.3/hyperledger-fabric-linux-amd64-2.4.3.tar.gz
+wget https://github.com/hyperledger/fabric-ca/releases/download/v1.5.3/hyperledger-fabric-ca-linux-amd64-1.5.3.tar.gz
+tar xvzf hyperledger-fabric-linux-amd64-2.4.3.tar.gz
+tar xvzf hyperledger-fabric-ca-linux-amd64-1.5.3.tar.gz
+cd bin
+export PATH=${PWD}:$PATH
+cd ../
+```
 
-在**物理世界**中，**凭证**可能包括：
+### 2.3 下载docker镜像
 
-- 与凭证持有者相关的信息（照片、名称或身份证号码）
-- 与发行者有关的信息（市政府、国家机构或认证机构）
-- 与凭据类型有关的信息（学历、护照）
-- 与凭据约束有关的信息（日期或使用条款）
+```bash
+docker pull hyperledger/fabric-peer:2.4.3
+docker pull hyperledger/fabric-orderer:2.4.3
+docker pull hyperledger/fabric-ccenv:2.4.3
+docker pull hyperledger/fabric-tools:2.4.3
+docker pull hyperledger/fabric-baseos:2.4.3
+docker pull hyperledger/fabric-ca:1.5.3
 
-**可验证凭证**（Verifiable Credentials）需要能够表示物理凭据所代表的所有相同信息。所以数字签名被应用到了**可验证凭证**中。
+docker tag hyperledger/fabric-peer:2.4.3 hyperledger/fabric-peer
+docker tag hyperledger/fabric-peer:2.4.3 hyperledger/fabric-peer:2.4
+docker tag hyperledger/fabric-orderer:2.4.3 hyperledger/fabric-orderer
+docker tag hyperledger/fabric-orderer:2.4.3 hyperledger/fabric-orderer:2.4
+docker tag hyperledger/fabric-ccenv:2.4.3 hyperledger/fabric-ccenv
+docker tag hyperledger/fabric-ccenv:2.4.3 hyperledger/fabric-ccenv:2.4
+docker tag hyperledger/fabric-tools:2.4.3 hyperledger/fabric-tools
+docker tag hyperledger/fabric-tools:2.4.3 hyperledger/fabric-tools:2.4
+docker tag hyperledger/fabric-baseos:2.4.3 hyperledger/fabric-baseos
+docker tag hyperledger/fabric-baseos:2.4.3 hyperledger/fabric-baseos:2.4
+docker tag hyperledger/fabric-ca:1.5.3 hyperledger/fabric-ca
+docker tag hyperledger/fabric-ca:1.5.3 hyperledger/fabric-ca:1.5
+```
 
-持有**可验证凭证**的人可以与**验证者**分享这些凭证，以证明他们具有特定特征的**可验证凭据**。
+### 2.3  启动fabric测试网络
 
-<img src="https://www.w3.org/TR/vc-data-model/diagrams/ecosystem.svg" style="zoom:80%;" />
+```bash
+cd test-network
+./network.sh down
+./network.sh up
+```
 
-#### 持有者（holder）
+### 2.4 创建通道
 
-**持有者**可以拥有一个或多个可验证凭据。示例：学生，员工和客户等。
+```bash
+./network.sh createChannel
+```
 
-#### 发行人（issuer）
-
-**发行人**通过验证主体的一个或多个属性，根据这些属性创建**可验证凭证**，并将**可验证凭证**传输给持有者。示例：公司、非营利组织、行业协会、政府和个人。
-
-#### 验证者（verifies）
-
-验证者通过接收一个或多个可验证的凭据并进行验证。示例：雇主，安全人员和网站。
-
-### DATA Model
-
-<img src="https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20230919161452375.png" alt="image-20230919161452375" style="zoom:80%;" />
-
-EXAMPLE 1: A simple example of a verifiable credential
+### 2.5 部署测试链码
 
 ```
-{
-  // set the context, which establishes the special terms we will be using
-  // such as 'issuer' and 'alumniOf'.
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://www.w3.org/2018/credentials/examples/v1"
-  ],
-  // specify the identifier for the credential
-  "id": "http://example.edu/credentials/1872",
-  // the credential types, which declare what data to expect in the credential
-  "type": ["VerifiableCredential", "AlumniCredential"],
-  // the entity that issued the credential
-  "issuer": "https://example.edu/issuers/565049",
-  // when the credential was issued
-  "issuanceDate": "2010-01-01T19:23:24Z",
-  // claims about the subjects of the credential
-  "credentialSubject": {
-    // identifier for the only subject of the credential
-    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
-    // assertion about the only subject of the credential
-    "alumniOf": {
-      "id": "did:example:c276e12ec21ebfeb1f712ebc6f1",
-      "name": [{
-        "value": "Example University",
-        "lang": "en"
-      }, {
-        "value": "Exemple d'Université",
-        "lang": "fr"
-      }]
-    }
-  },
-  // digital proof that makes the credential tamper-evident
-  // see the NOTE at end of this section for more detail
-  "proof": {
-    // the cryptographic signature suite that was used to generate the signature
-    "type": "RsaSignature2018",
-    // the date the signature was created
-    "created": "2017-06-18T21:19:10Z",
-    // purpose of this proof
-    "proofPurpose": "assertionMethod",
-    // the identifier of the public key that can verify the signature
-    "verificationMethod": "https://example.edu/issuers/565049#key-1",
-    // the digital signature value
-    "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..TCYt5X
-      sITJX1CxPCT8yAV-TVkIEq_PbChOMqsLfRoPsnsgw5WEuts01mq-pQy7UJiN5mgRxD-WUc
-      X16dUEMGlv50aqzpqh4Qktb3rk-BuQy72IFLOqV0G_zS245-kronKb78cPN25DGlcTwLtj
-      PAYuNzVBAh4vGHSrQyHUdBBPM"
-  }
-}
+./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-go -ccl go
 ```
+
+## 3. 部署DID链码到fabric
+
+### 3.1 复制fabric-did目录下的contract到test-network
+
+```bash
+cp -r {repo_path}/contract .
+cd contract/
+go mod tidy
+go mod vendor
+cd ..
+```
+
+### 3.2 安装DID链码
+
+```bash
+./network.sh deployCC -ccn did -ccp contract -ccl go
+```
+
+![image-20240801143741810](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20240801143741810.png)
+
+## 4. 测试fabric-sdk的功能
+
+### 4.1 复制test-network/organizations/*到fabric-did/config目录下
+
+```
+cd fabric-did/config
+cp -r {fabric-sample-path}/test-network/organizations/* .
+cd ../
+```
+
+![image-20240801145017359](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20240801145017359.png)
+
+### 4.2 运行测试
+
+```
+go test -v  -run=TestGetBlockData
+```
+
+![image-20240801144608854](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20240801144608854.png)
+
+如果遇到网络问题，可能需要设置host
+
+```
+{fabric_ip}     peer0.org1.example.com
+{fabric_ip}     peer0.org2.example.com
+{fabric_ip}     orderer.example.com
+```
+
+## 5. 测试fabric_did的功能
+
+```
+go test -v  -run=TestCreateDID 
+```
+
+![image-20240801145235567](https://gitee.com/wujian2023/typora_images/raw/master/auto_upload/image-20240801145235567.png)
+
+
+
+上述只是实现了did和vc的链上存储和验证，隐私保护、身份认证等功能敬请期待。
