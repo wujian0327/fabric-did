@@ -130,7 +130,7 @@ peers:
       path: ${FABRIC_SDK_GO_PROJECT_PATH}/config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
 
   peer0.org2.example.com:
-    url: peer0.org2.example.com:17051
+    url: peer0.org2.example.com:9051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
       keep-alive-time: 0s
